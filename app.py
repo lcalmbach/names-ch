@@ -54,10 +54,12 @@ def get_min_max_years(df):
 
 def show_wordcloud(df):
     with st.expander('Anleitung'):
-        st.write('Wähle das gewünschte Jahr und die Zahl der angezeigten Namen in der Grafik aus. Bei > 300 Namen dauert der Prozess ziemlich lange' )
+        st.write("""Wähle das gewünschte Jahr und die Zahl der angezeigten Namen in der Grafik aus. Bei > 300 Namen dauert der Prozess ziemlich 
+lange. Diese Grafik stellt die Verbreitung der häufigsten Vornamen der Einwohner im Kanton Basel-Stadt als Wordcloud dar. Häufige Namen 
+erscheinen in Grossbuchstaben und im Zentrum der Grafik.""")
     years = range(min_year, max_year+1)
     jahr = st.sidebar.selectbox('Jahr', options = years, index = len(years)-1)
-    threshold = st.sidebar.number_input('Limite angezeigte Namen in der Grafik',min_value=1,max_value=1000, value=200)
+    threshold = st.sidebar.number_input('Limite für Anzahl angezeigte Namen', min_value=1,max_value=1000, value=200)
     if threshold > 200:
         st.info('Diese Abfrage dauert etwas länger, habe etwas Geduld...')
     st.markdown('### Vornamen Männer')
@@ -71,7 +73,7 @@ def show_wordcloud(df):
     df_ranked_f = rank_data(df_m, threshold)
     st.markdown('### Vornamen Frauen')
     wc = create_word_list(df_ranked_f)
-    # st.write(wc)
+
 
 def show_timeseries(df):
     def get_timeseries(df, title):
@@ -83,7 +85,6 @@ def show_timeseries(df):
         ).properties(width=800,height=400)
         return chart
             
-
     with st.expander('Anleitung'):
         st.write('Wähle das Geschlecht sowie die Vornamen, deren Häufigkeit als Zeitreihe dargestellt werden sollen' )
     gender = st.sidebar.selectbox('Geschlecht', options = ['Weiblich', 'Männlich'])
@@ -125,14 +126,10 @@ def show_table(df):
 def main():
     global min_year
     global max_year
-    def init():
-        st.set_page_config(
-            page_title=my_name,
-            layout="wide",
-        )
 
-
-    init()
+    st.set_page_config(
+        page_title=my_name,
+        layout="wide")
     df = read_data().copy()
     min_year, max_year = get_min_max_years(df)
     st.sidebar.markdown(f"## 👫🏽 {my_name}")
