@@ -3,11 +3,13 @@ import pandas as pd
 import streamlit_wordcloud as wordcloud
 import altair as alt
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
+import validators
 
-__version__ = '0.0.4'
+
+__version__ = '0.0.5'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2021-9-26'
+VERSION_DATE = '2021-9-27'
 my_name = 'Vornamen Explorer'
 my_kuerzel = "VNEx"
 GIT_REPO = 'https://github.com/lcalmbach/names-ch'
@@ -17,20 +19,26 @@ APP_INFO = f"""<div style="background-color:powderblue; padding: 10px;border-rad
     <a href="{GIT_REPO}">git-repo</a>
     """
 
-NAME_FILE = './100129.csv'
+NAME_FILE = './data/100129.csv'
+WIKI_URL_BASE = 'https://de.wikipedia.org/wiki/'
 min_year = 0
 max_year = 0
 
-@st.cache()
+@st.experimental_memo()
 def read_data():
     df = pd.read_csv(NAME_FILE,sep=';')
     df = df[['Jahr','Vorname','Geschlecht','Anzahl']]
+    df = df.dropna()
     df = df.rename(columns={'Jahr':'year', 'Vorname': 'text','Geschlecht':'gender','Anzahl':'value'})
+
     return df
 
 def filter_data(df,filter_exp):
     df_filtered = df.query(filter_exp)
     return df_filtered
+
+def verify_url(url):
+    return validators.url(url)
 
 def rank_data(df, threshold):
     df_ranked = df
@@ -39,11 +47,11 @@ def rank_data(df, threshold):
     return df_ranked
 
 def create_word_list(df):
-    words = []
+    names = []
     for index, row in df.iterrows():
-        words.append({ 'text': row['text'], 'value': row['value'], 'rank': row['rank'] })
+        names.append({ 'text': row['text'], 'value': row['value'], 'rank': row['rank'] })
     
-    return wordcloud.visualize(words, 
+    return wordcloud.visualize(names, 
         tooltip_data_fields={'text':'Vorname', 'value':'Anzahl', 'rank':'Rang'}, 
         per_word_coloring=False)
 
@@ -52,28 +60,39 @@ def get_min_max_years(df):
     max_year = df['year'].max()
     return min_year, max_year
 
+
 def show_wordcloud(df):
+    def show_link(name):
+        
+            url = WIKI_URL_BASE + name
+            if verify_url((url)):
+                st.markdown(f"Mehr über den Vornamen {name} auf [Wikipedia]({url})", unsafe_allow_html=True)
+
     with st.expander('Anleitung'):
-        st.write("""Wähle das gewünschte Jahr und die Zahl der angezeigten Namen in der Grafik aus. Bei > 300 Namen dauert der Prozess ziemlich 
+        st.write("""Wähle das gewünschte Jahr und die Zahl der angezeigten Vornamen in der Grafik aus. Bei > 300 Namen dauert der Prozess ziemlich 
 lange. Diese Grafik stellt die Verbreitung der häufigsten Vornamen der Einwohner im Kanton Basel-Stadt als Wordcloud dar. Häufige Namen 
-erscheinen in Grossbuchstaben und im Zentrum der Grafik.""")
+erscheinen in Grossbuchstaben und im Zentrum der Grafik. Wenn du auf einen Vornamen klickst, so erscheint unterhalb der Grafik ein Link auf die entsprechende 
+Wikipedia Seite mit mehr Informationen zum Vornamen.""")
     years = range(min_year, max_year+1)
     jahr = st.sidebar.selectbox('Jahr', options = years, index = len(years)-1)
     threshold = st.sidebar.number_input('Limite für Anzahl angezeigte Namen', min_value=1,max_value=1000, value=200)
     if threshold > 200:
         st.info('Diese Abfrage dauert etwas länger, habe etwas Geduld...')
     st.markdown('### Vornamen Männer')
-    filter_exp = f"year == {jahr} & gender == 'M' & text != 'Übrige'"
+    filter_exp = f"year == {jahr} & gender == 'M' & text != 'Übrige' & text"
     df_m = filter_data(df, filter_exp).sort_values(by='value',ascending=[False])
     df_ranked_m = rank_data(df_m, threshold)
     wc = create_word_list(df_ranked_m)
-    
+    if wc['clicked'] != None:
+        show_link(wc['clicked']['text'])
     filter_exp = f"year == {jahr} & gender == 'W' & text != 'Übrige'"
     df_m = filter_data(df,filter_exp).sort_values(by='value',ascending=[False])
     df_ranked_f = rank_data(df_m, threshold)
     st.markdown('### Vornamen Frauen')
     wc = create_word_list(df_ranked_f)
-
+    if wc['clicked'] != None:
+        show_link(wc['clicked']['text'])
+    
 
 def show_timeseries(df):
     def get_timeseries(df, title):
