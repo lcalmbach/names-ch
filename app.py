@@ -16,7 +16,7 @@ GIT_REPO = 'https://github.com/lcalmbach/names-ch'
 APP_INFO = f"""<div style="background-color:powderblue; padding: 10px;border-radius: 15px;">
     <small>App created by <a href="mailto:{__author_email__}">{__author__}</a><br>
     version: {__version__} ({VERSION_DATE})<br>
-    source:<a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a><br>
+    source:<a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a>
     <br><a href="{GIT_REPO}">git-repo</a>
     """
 
