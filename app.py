@@ -83,15 +83,19 @@ Wikipedia Seite mit mehr Informationen zum Vornamen.""")
     df_m = filter_data(df, filter_exp).sort_values(by='value',ascending=[False])
     df_ranked_m = rank_data(df_m, threshold)
     wc = create_word_list(df_ranked_m)
-    if wc['clicked'] != None:
+    try:
         show_link(wc['clicked']['text'])
+    except:
+        pass
     filter_exp = f"year == {jahr} & gender == 'W' & text != 'Übrige'"
     df_m = filter_data(df,filter_exp).sort_values(by='value',ascending=[False])
     df_ranked_f = rank_data(df_m, threshold)
     st.markdown('### Vornamen Frauen')
     wc = create_word_list(df_ranked_f)
-    if wc['clicked'] != None:
+    try:
         show_link(wc['clicked']['text'])
+    except:
+        pass
     
 
 def show_timeseries(df):
