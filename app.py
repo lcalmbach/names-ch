@@ -6,10 +6,10 @@ from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode
 import validators
 
 
-__version__ = '0.0.5'
+__version__ = '0.0.6'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2021-9-27'
+VERSION_DATE = '2021-9-28'
 my_name = 'Vornamen Explorer'
 my_kuerzel = "VNEx"
 GIT_REPO = 'https://github.com/lcalmbach/names-ch'
