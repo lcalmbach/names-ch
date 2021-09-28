@@ -11,11 +11,13 @@ __author_email__ = 'lcalmbach@gmail.com'
 VERSION_DATE = '2021-9-28'
 my_name = 'Namen Explorer'
 my_kuerzel = "NEx"
+SOURCE_URL = 'https://data.bs.ch/explore/dataset/100129'
 GIT_REPO = 'https://github.com/lcalmbach/names-ch'
 APP_INFO = f"""<div style="background-color:powderblue; padding: 10px;border-radius: 15px;">
     <small>App created by <a href="mailto:{__author_email__}">{__author__}</a><br>
     version: {__version__} ({VERSION_DATE})<br>
-    <a href="{GIT_REPO}">git-repo</a>
+    source:<a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a><br>
+    <br><a href="{GIT_REPO}">git-repo</a>
     """
 
 @st.experimental_memo()
