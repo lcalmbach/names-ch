@@ -207,14 +207,6 @@ def show_analysis(df):
         df_last_occurrence = df.query(filter_exp)
         return df_last_occurrence
 
-    def get_last_year(df, name):
-        df_name = df.query(f"text == @name")
-        return df_name['year'].max()
-        
-    def extract_close_ranks(df,rank,number):
-        filter_exp = f"(rank > @rank -3) & (rank < (@rank + {number - 4}))"
-        df_rank  = df.query(filter_exp)
-        return df_rank
 
     def prepare_timeseries_df(df_gender, name):
         df_years = df_gender.query('text == @name')
