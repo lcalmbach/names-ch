@@ -5,18 +5,18 @@ import first_names
 import surnames
 import requests
 
-__version__ = '0.0.7'
+__version__ = '0.0.8'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2021-9-28'
-my_name = 'Namen Explorer'
+VERSION_DATE = '2021-9-30'
+my_name = 'Namen Explorer Basel-Stadt'
 my_kuerzel = "NEx"
 SOURCE_URL = 'https://data.bs.ch/explore/dataset/100129'
 GIT_REPO = 'https://github.com/lcalmbach/names-ch'
 APP_INFO = f"""<div style="background-color:powderblue; padding: 10px;border-radius: 15px;">
     <small>App created by <a href="mailto:{__author_email__}">{__author__}</a><br>
     version: {__version__} ({VERSION_DATE})<br>
-    source:<a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a>
+    source: <a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a>
     <br><a href="{GIT_REPO}">git-repo</a>
     """
 
@@ -39,7 +39,8 @@ def main():
     
     lottie_search_names,ok = get_lottie()
     if ok:
-        st_lottie(lottie_search_names,height=80, loop=False)
+        with st.sidebar:
+            st_lottie(lottie_search_names,height=80, loop=False)
     else:
         st.write(123)
     st.sidebar.markdown(f"## 👫🏽 {my_name}")

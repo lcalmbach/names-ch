@@ -126,8 +126,8 @@ def show_menu():
 
     df = read_data()#.copy()
     min_year, max_year = get_min_max_years(df)
-    menu_action = st.sidebar.selectbox("Darstellung",['Wordcloud','Zeitreihe', 'Tabelle'])
-    if menu_action == 'Wordcloud':
+    menu_action = st.sidebar.selectbox("Darstellung",['Wort-Wolke','Zeitreihe', 'Tabelle'])
+    if menu_action == 'Wort-Wolke':
         show_wordcloud(df)
     elif menu_action == 'Zeitreihe':
         show_timeseries(df)
