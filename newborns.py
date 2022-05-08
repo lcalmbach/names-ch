@@ -230,7 +230,7 @@ def show_analysis(df):
         beginn_datenreihe = df_ranked['year'].min()
         st.markdown(f"""Wähle Geschlecht und einen Vornamen aus, über den du mehr erfahren möchtest. Die Zeitreihe der Anzahl und Rang des Namens seit Beginn der Datenreihe in {beginn_datenreihe} vermittelt einen Eindruck, wie viele Kinder in Basel 
         über die Jahre diesen Vornamen erhielten.""" )
-    st.markdown(f"### Beliebtheit des Vornamens *{name}* in Basel-Stadt im Jahr {last_year}")
+    st.markdown(f"### Beliebtheit des Vornamens *{name}* in Basel-Stadt")
     
     col1, col2 = st.columns(2)
     settings = {'width':400, 'height':250}

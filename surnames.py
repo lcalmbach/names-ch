@@ -210,7 +210,7 @@ def show_analysis(df):
     with st.expander('Anleitung'):
         st.write("""Wähle Geschlecht und einen Vornamen aus, über den du mehr erfahren möchtest. Die Zeitreihe der Anzahl und Rang des Namens seit Beginn der Datenreihe in 1979 vermittelt einen Eindruck, wie viele Personen 
 über die Jahre diesen Namen trugen.""" )
-    st.markdown(f"### Beliebtheit des Vornamens *{name}* in Basel-Stadt im Jahr {last_year}")
+    st.markdown(f"### Beliebtheit des Vornamens *{name}* in Basel-Stadt")
     
     col1, col2 = st.columns(2)
     settings = {'width':400, 'height':250}
