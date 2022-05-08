@@ -3,20 +3,21 @@ import streamlit as st
 from streamlit_lottie import st_lottie
 import first_names
 import surnames
+import newborns
 import requests
 
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2021-9-30'
+VERSION_DATE = '2022-05-08'
 my_name = 'Namen Explorer Basel-Stadt'
 my_kuerzel = "NEx"
-SOURCE_URL = 'https://data.bs.ch/explore/dataset/100129'
+SOURCE_URL = 'https://data.bs.ch/pages/home/'
 GIT_REPO = 'https://github.com/lcalmbach/names-ch'
 APP_INFO = f"""<div style="background-color:powderblue; padding: 10px;border-radius: 15px;">
     <small>App created by <a href="mailto:{__author_email__}">{__author__}</a><br>
     version: {__version__} ({VERSION_DATE})<br>
-    source: <a href="{SOURCE_URL}">Statistisches Amt Basel-Stadt</a>
+    source: <a href="{SOURCE_URL}">Datenportal Basel-Stadt</a>
     <br><a href="{GIT_REPO}">git-repo</a>
     """
 
@@ -31,7 +32,6 @@ def get_lottie():
     return r,ok
     
     
-
 def main():
     st.set_page_config(
         page_title=my_name,
@@ -42,13 +42,17 @@ def main():
         with st.sidebar:
             st_lottie(lottie_search_names,height=80, loop=False)
     else:
-        st.write(123)
+        pass
     st.sidebar.markdown(f"## 👫🏽 {my_name}")
-    menu_action = st.sidebar.selectbox('Menu',['Vornamen','Nachnamen'])
-    if menu_action == 'Vornamen':
+    menu_options = ['Vornamen der Bevölkerung','Nachnamen der Bevölkerung', 'Namen von Neugeborenen']
+    menu_action = st.sidebar.selectbox('Menu',menu_options)
+    if menu_action == menu_options[0]:
         first_names.show_menu()
-    elif menu_action == 'Nachnamen':
+    elif menu_action == menu_options[1]:
         surnames.show_menu()
+    elif menu_action == menu_options[2]:
+        newborns.show_menu()
+    
     st.sidebar.markdown(APP_INFO,unsafe_allow_html=True)
 
 if __name__ == '__main__':

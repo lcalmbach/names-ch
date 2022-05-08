@@ -149,16 +149,15 @@ def show_table(df):
     
 def show_analysis(df):
     def get_description(df,name):
-        df_name = df.query('text == @name').sort_values('rank')
-        # min max mean over years where name has occured
-        df_agg_value = df_name.groupby(df_name['text']).value.agg(['min','max','mean', 'count']).reset_index()                 
+        df_name_ob_rank = df.query('text == @name').sort_values('rank')
+        df_name_ob_year = df.query('text == @name').sort_values('year')
         # first and last year for name occurrence
-        df_agg_year = df_name.groupby(df_name['text']).year.agg(['min','max'])
+        df_agg_year = df_name_ob_rank.groupby(df_name_ob_rank['text']).year.agg(['min','max'])
         last_year = df_agg_year.iloc[0]['max']
         df_year = df.query('year == @last_year').sort_values('rank').copy().reset_index()
         record = get_record(df_year, name, last_year)
         rank = record.iloc[0]['rank']
-        rank_start = int(df_name.iloc[-1]['rank'])
+        rank_start = int(df_name_ob_year.iloc[0]['rank'])
         max_rank = df.query('year == @last_year')['rank'].max()
         index = (record.index).astype(int)
 
@@ -180,11 +179,12 @@ def show_analysis(df):
         if diff_tot > 0:
             text += f". Seit dem ersten Auftreten im Jahr {df_agg_year.iloc[0]['min']} ist die Anzahl Personen mit diesem Nachnamen um {diff_tot} gestiegen."  
         elif diff_tot < 0:
-            text += f". Seit dem ersten Auftreten im Jahr {df_agg_year.iloc[0]['min']} ist Anzahl Personen mit diesem Nachnamen um {diff_tot} gesunken."
+            text += f". Seit dem ersten Auftreten im Jahr {df_agg_year.iloc[0]['min']} ist die Anzahl Personen mit diesem Nachnamen um {diff_tot} gesunken."
         else: 
             text += f". Die Zahl der Personen mit diesem Nachnamen ist wieder identisch mit derjenigen von {df_agg_year.iloc[0]['min']}."
 
-        text += f" Damals hatte {name} den Rang {rank_start}.  Weitere Informationen zum Nachnamen {name} findest du auf [Wikipedia]({WIKI_URL_BASE}{name})."
+        text += f""" Damals hatte {name} den Rang {rank_start}.  Weitere Informationen zum Nachnamen {name} findest du auf 
+        [Wikipedia]({WIKI_URL_BASE}{name}). Hier gehts zum Datensatz auf [Datenportal Basel-Stadt](https://data.bs.ch/explore/dataset/100127)."""
 
         return text
 
@@ -226,7 +226,7 @@ def show_analysis(df):
         chart = get_timeseries(ts_df, settings)
         st.altair_chart(chart)
     
-    st.markdown(get_description(df_ranked,name))
+    st.markdown(get_description(df_ranked, name))
 
 def show_menu():
     global min_year
