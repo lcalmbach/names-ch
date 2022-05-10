@@ -1,3 +1,4 @@
+from tkinter import Scale
 import streamlit as st 
 import pandas as pd
 import streamlit_wordcloud as wordcloud
@@ -5,12 +6,14 @@ import altair as alt
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import validators
 from datetime import datetime
+import time
 
 
 NAME_FILE = './data/100192.csv'
 WIKI_URL_BASE = 'https://de.wikipedia.org/wiki/'
 min_year = 0
 max_year = 0
+gender_dic={'Mädchen': 'W', 'Knaben':'M'}
 
 @st.experimental_memo()
 def read_data():
@@ -89,24 +92,24 @@ Wikipedia Seite mit mehr Informationen zum Vornamen.""")
 
 def get_timeseries(df, settings):
     if 'color' in settings:
-        chart = alt.Chart(df, title = settings['title']).mark_line().encode(
-            x=alt.X('year:Q', axis=alt.Axis(title='Jahr',format='N')),
+        chart = alt.Chart(df, title = settings['title']).mark_line(point=True).encode(
+            x=alt.X('year:Q', axis=alt.Axis(title='Jahr', format='N')),
             y=settings['y'],
             color = alt.Color('text:N', legend=alt.Legend(title="Vornamen")),
             tooltip=['year','text','value','rank']
-        ).properties(width=settings['width'],height=settings['height'])
+        ).properties(width=settings['width'], height=settings['height'])
     else:
-        chart = alt.Chart(df, title = settings['title']).mark_line().encode(
-            x=alt.X('year:Q', axis=alt.Axis(title='Jahr',format='N')),
+        chart = alt.Chart(df, title = settings['title']).mark_line(point=True).encode(
+            x=alt.X('year:Q', axis=alt.Axis(title='Jahr', format='N')),
             y=settings['y'],
             tooltip=['year','text','value','rank']
-        ).properties(width=settings['width'],height=settings['height'])
+        ).properties(width=settings['width'], height=settings['height'])
 
     return chart
 
 def show_timeseries(df):    
     with st.expander('Anleitung'):
-        st.markdown('Wähle das Geschlecht sowie die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
+        st.markdown('Wähle das Geschlecht sowie den oder die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
     gender = st.sidebar.selectbox('Geschlecht', options = ['Weiblich', 'Männlich'])
     filter_exp = f"gender == '{gender[0]}' & text != 'Übrige'"
     df = filter_data(df,filter_exp).sort_values(by='text')
@@ -127,7 +130,6 @@ def show_timeseries(df):
     settings['title'] =  f'Rang des Vornamens'
     chart = get_timeseries(df, settings)
     st.altair_chart(chart)
-    
     
 
 def show_table(df):
@@ -154,6 +156,44 @@ def show_table(df):
     df = df[['year','text','value']].sort_values(by=['text','year'])
     df.columns=['Jahr','Vorname','Anzahl']
     AgGrid(df)
+
+def show_ranking(df):
+    years_options = list(df['year'].unique())
+    years_options = [int(x) for x in years_options]
+    years_options.sort(reverse=True)
+    sel_year = st.sidebar.selectbox('Jahr', options=years_options)
+    cutoff= st.sidebar.slider('Show Top',min_value=10, max_value=100)
+    df['year'] = df['year'].astype("int")
+    df = df[df['year'] == sel_year]
+    boys = df[df['gender'] == 'M']
+    boys = rank_data(boys).sort_values('rank')
+    boys = boys[:cutoff]
+    girls= df[df['gender'] == 'W']
+    girls = rank_data(girls).sort_values('rank')
+    girls = girls[:cutoff]
+
+    st.markdown(f"### {sel_year}")
+    cols = st.columns(2)
+    chart_boys = plot_rank(boys)
+    chart_girls = plot_rank(girls)
+    with cols[0]:
+        st.markdown('#### Knaben')
+        st.altair_chart(chart_boys)
+    with cols[1]:
+        st.markdown('#### Mädchen')
+        st.altair_chart(chart_girls)
+
+
+def plot_rank(df):
+    df.columns=['Jahr','Name','Geschlecht','Anzahl','Rang']
+    
+    h=0 if len(df)<16 else (len(df)-15)*6
+    chart = alt.Chart(df).mark_bar().encode(
+        x="Anzahl:Q",
+        y=alt.Y('Name:N', sort='-x'),
+        tooltip=['Name', 'Rang']
+    ).properties(width=400, height=500 + h)
+    return chart
 
 
 def show_analysis(df):
@@ -186,7 +226,7 @@ def show_analysis(df):
         
         if rank == 1:
             text += f", dies ist somit der beliebteste {gender_plur}-Vorname in Basel-Stadt!"
-        elif (rank > 1) & (rank < max_rank):
+        elif (rank > 1) & (rank < max_rank - 50):
             text += f" hinter {name_before} und vor {name_after}"
         else:
             text += f", er gehört damit zu den eher selteneren Vornamen in Basel-Stadt"
@@ -196,9 +236,9 @@ def show_analysis(df):
             text += f". Seit dem ersten Auftreten im Jahr {df_agg_year.iloc[0]['min']} ist Anzahl Personen mit diesem Vornamen um {diff_tot} gesunken."
         else: 
             text += f". Die Zahl der Personen mit diesem Vornamen ist wieder identisch mit derjenigen von {df_agg_year.iloc[0]['min']}."
-
-        text += f""" Damals hatte {name} den Rang {rank_start}. Informationen zu den Vornamen von Neugeborenen schweizweit findest du unter [bfs.admin.ch](https://www.bfs.admin.ch/bfs/de/home/statistiken/bevoelkerung/geburten-todesfaelle/vornamen-neugeborene.html). 
-        Weitere Informationen zum Vornamen {name} findest du auf [Wikipedia]({WIKI_URL_BASE}{name}). Hier gehts zum Datensatz auf [Datenportal 
+        if diff_tot != 0:
+            text += f" Damals hatte {name} den Rang {rank_start}. Informationen zu den Vornamen von Neugeborenen schweizweit findest du unter [bfs.admin.ch](https://www.bfs.admin.ch/bfs/de/home/statistiken/bevoelkerung/geburten-todesfaelle/vornamen-neugeborene.html)."
+        text += f""" Weitere Informationen zum Vornamen {name} findest du auf [Wikipedia]({WIKI_URL_BASE}{name}). Hier gehts zum Datensatz auf [Datenportal 
         Basel-Stadt](https://data.bs.ch/explore/dataset/100192)."""
 
         return text
@@ -254,13 +294,16 @@ def show_menu():
 
     df = read_data()#.copy()
     min_year, max_year = get_genderin_genderax_years(df)
-    menu_action = st.sidebar.selectbox("Darstellung",['Wort-Wolke','Zeitreihe', 'Analyse','Tabelle'])
-    if menu_action == 'Wort-Wolke':
+    menu_options= ['Wort-Wolke','Zeitreihe', 'Rang-Reihenfolge', 'Analyse','Tabelle']
+    menu_action = st.sidebar.selectbox("Darstellung",options=menu_options)
+    if menu_action == menu_options[0]:
         show_wordcloud(df)
-    elif menu_action == 'Zeitreihe':
+    elif menu_action == menu_options[1]:
         show_timeseries(df)
-    elif menu_action == 'Analyse':
+    elif menu_action == menu_options[2]:
+        show_ranking(df)
+    elif menu_action == menu_options[3]:
         show_analysis(df)
-    elif menu_action == 'Tabelle':
+    elif menu_action == menu_options[4]:
         show_table(df)
 

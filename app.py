@@ -6,10 +6,10 @@ import surnames
 import newborns
 import requests
 
-__version__ = '0.0.9'
+__version__ = '0.0.10'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2022-05-08'
+VERSION_DATE = '2022-05-10'
 my_name = 'Namen Explorer Basel-Stadt'
 my_kuerzel = "NEx"
 SOURCE_URL = 'https://data.bs.ch/pages/home/'
