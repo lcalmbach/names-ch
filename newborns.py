@@ -1,12 +1,9 @@
-from tkinter import Scale
 import streamlit as st 
 import pandas as pd
 import streamlit_wordcloud as wordcloud
 import altair as alt
 from st_aggrid import GridOptionsBuilder, AgGrid, GridUpdateMode, DataReturnMode, JsCode
 import validators
-from datetime import datetime
-import time
 
 
 NAME_FILE = './data/100192.csv'
