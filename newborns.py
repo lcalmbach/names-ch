@@ -106,16 +106,22 @@ def get_timeseries(df, settings):
 
 def show_timeseries(df):    
     with st.expander('Anleitung'):
-        st.markdown('Wähle das Geschlecht sowie den oder die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
-    gender = st.sidebar.selectbox('Geschlecht', options = ['Weiblich', 'Männlich'])
-    filter_exp = f"gender == '{gender[0]}' & text != 'Übrige'"
+        st.markdown('Wähle das Geschlecht des Kindes sowie den oder die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
+    gender = st.sidebar.selectbox('Geschlecht', options = list(gender_dic.keys()))
+    sort_by_options= ['nach Rang','Alphabetisch']
+    sort_by = st.sidebar.radio('Sortiere Vornamen', sort_by_options)
+    filter_exp = f"gender == '{gender_dic[gender]}' & text != 'Übrige'"
     df = filter_data(df,filter_exp).sort_values(by='text')
-    lst_names = df['text'].unique()
-    names = st.sidebar.multiselect('Vornamen',lst_names,[lst_names[0],lst_names[1],lst_names[2]])
-    filter_exp = f"text.isin({names})"
     df = rank_data(df)
-    df = filter_data(df,filter_exp).sort_values(by='text')
-    
+    if sort_by == sort_by_options[0]:
+        df = df.sort_values(by='rank')
+    else:    
+        df = df.sort_values(by='text')
+    lst_names = df['text'].unique()
+    names = st.sidebar.multiselect('Vornamen', lst_names, lst_names[:3])
+    filter_exp = f"text.isin({names})"
+    df = filter_data(df,filter_exp)
+
     settings = {'width':500, 'height':300}
     settings['y'] = alt.Y('value:Q', axis=alt.Axis(title='Anzahl'))
     settings['title'] =  f'Anzahl des Vornamens'
