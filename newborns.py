@@ -104,6 +104,7 @@ def get_timeseries(df, settings):
 
     return chart
 
+
 def show_timeseries(df):    
     with st.expander('Anleitung'):
         st.markdown('Wähle das Geschlecht des Kindes sowie den oder die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
@@ -134,7 +135,7 @@ def show_timeseries(df):
     chart = get_timeseries(df, settings)
     st.altair_chart(chart)
     
-
+    
 def show_table(df):
     def aggregate_df(df):
         df_agg = df.groupby(df['text']).value.agg(['min','max','mean']).reset_index()      
@@ -159,6 +160,7 @@ def show_table(df):
     df = df[['year','text','value']].sort_values(by=['text','year'])
     df.columns=['Jahr','Vorname','Anzahl']
     AgGrid(df)
+
 
 def show_ranking(df):
     years_options = list(df['year'].unique())
@@ -291,6 +293,7 @@ def show_analysis(df):
     
     st.markdown(get_description(df_ranked,name))
 
+
 def show_menu():
     global min_year
     global max_year
@@ -298,7 +301,7 @@ def show_menu():
     df = read_data()#.copy()
     min_year, max_year = get_genderin_genderax_years(df)
     menu_options= ['Wort-Wolke','Zeitreihe', 'Rang-Reihenfolge', 'Analyse','Tabelle']
-    menu_action = st.sidebar.selectbox("Darstellung",options=menu_options)
+    menu_action = st.sidebar.selectbox("Darstellung", options=menu_options)
     if menu_action == menu_options[0]:
         show_wordcloud(df)
     elif menu_action == menu_options[1]:

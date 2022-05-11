@@ -50,7 +50,7 @@ def create_word_list(df):
     
     return wordcloud.visualize(names, 
         tooltip_data_fields={'text':'Nachname', 'value':'Anzahl', 'rank':'Rang'}, 
-        per_word_coloring=False)
+        per_word_coloring=False, height=600)
 
 def get_min_max_years(df):
     min_year = df['year'].min()
@@ -106,10 +106,18 @@ def get_timeseries(df, settings):
 
 def show_timeseries(df):
     with st.expander('Anleitung'):
-        st.write('Wähle die Nachnamen, deren Häufigkeit als Zeitreihe dargestellt werden sollen' )
-    df = rank_data(df).sort_values(by='text')
+        st.write('Wähle die Nachnamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
+    sort_by_options= ['nach Rang','Alphabetisch']
+    sort_by = st.sidebar.radio('Sortiere Namen', sort_by_options)
+    filter_exp = "text != 'Übrige'"
+    df = filter_data(df,filter_exp).sort_values(by='text')
+    df = rank_data(df)
+    if sort_by == sort_by_options[0]:
+        df = df.sort_values(by='rank')
+    else:    
+        df = df.sort_values(by='text')
     lst_names = df['text'].unique()
-    names = st.sidebar.multiselect('Nachnamen',lst_names,[lst_names[0],lst_names[1],lst_names[2]])
+    names = st.sidebar.multiselect('Nachnamen',lst_names,lst_names[:4])
     filter_exp = f"text.isin({names})"
     df = filter_data(df,filter_exp).sort_values(by='text')
     settings = {'width':700, 'height':300}
@@ -228,19 +236,49 @@ def show_analysis(df):
     
     st.markdown(get_description(df_ranked, name))
 
+def show_ranking(df):
+    years_options = list(df['year'].unique())
+    years_options = [int(x) for x in years_options]
+    years_options.sort(reverse=True)
+    sel_year = st.sidebar.selectbox('Jahr', options=years_options)
+    cutoff= st.sidebar.slider('Show Top',min_value=10, max_value=100)
+    df['year'] = df['year'].astype("int")
+    df = df[df['year'] == sel_year]
+    df = rank_data(df).sort_values('rank')
+    df = df[:cutoff]
+
+    st.markdown(f"### {sel_year}")
+    chart = plot_rank(df)
+    st.altair_chart(chart)
+
+
+def plot_rank(df):
+    df.columns=['Jahr','Name','Anzahl','Rang']
+    h=0 if len(df)<16 else (len(df)-15)*6
+    chart = alt.Chart(df).mark_bar().encode(
+        x="Anzahl:Q",
+        y=alt.Y('Name:N', sort='-x'),
+        tooltip=['Name', 'Rang']
+    ).properties(width=400, height=500 + h)
+    return chart
+
+
 def show_menu():
     global min_year
     global max_year
 
     df = read_data()
     min_year, max_year = get_min_max_years(df)
-    menu_action = st.sidebar.selectbox("Darstellung",['Wort-Wolke','Zeitreihe', 'Analyse','Tabelle'])
-    if menu_action == 'Wort-Wolke':
+    menu_options= ['Wort-Wolke','Zeitreihe', 'Rang-Reihenfolge', 'Analyse','Tabelle']
+    menu_action = st.sidebar.selectbox("Darstellung", menu_options)
+    if menu_action == menu_options[0]:
         show_wordcloud(df)
-    elif menu_action == 'Zeitreihe':
+    elif menu_action == menu_options[1]:
         show_timeseries(df)
-    elif menu_action == 'Analyse':
+    elif menu_action == menu_options[2]:
+        show_ranking(df)
+    elif menu_action == menu_options[3]:
         show_analysis(df)
-    elif menu_action == 'Tabelle':
+    elif menu_action == menu_options[4]:
         show_table(df)
 

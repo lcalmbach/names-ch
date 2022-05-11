@@ -1,15 +1,16 @@
 from altair.vegalite.v4.schema.core import Align
 import streamlit as st 
 from streamlit_lottie import st_lottie
+from streamlit_option_menu import option_menu
 import first_names
 import surnames
 import newborns
 import requests
 
-__version__ = '0.0.10'
+__version__ = '0.1.0'
 __author__ = 'Lukas Calmbach'
 __author_email__ = 'lcalmbach@gmail.com'
-VERSION_DATE = '2022-05-10'
+VERSION_DATE = '2022-05-11'
 my_name = 'Namen Explorer Basel-Stadt'
 my_kuerzel = "NEx"
 SOURCE_URL = 'https://data.bs.ch/pages/home/'
@@ -43,9 +44,14 @@ def main():
             st_lottie(lottie_search_names,height=80, loop=False)
     else:
         pass
-    st.sidebar.markdown(f"## 👫🏽 {my_name}")
-    menu_options = ['Vornamen der Bevölkerung','Nachnamen der Bevölkerung', 'Namen von Neugeborenen']
-    menu_action = st.sidebar.selectbox('Menu',menu_options)
+    
+    menu_options = ['Vornamen','Nachnamen', 'Neugeborene']
+    with st.sidebar:
+        st.markdown(f"## 👫🏽 {my_name}")
+        menu_action = option_menu(None, menu_options, 
+            icons=['person', 'person-plus', "person-x"], 
+            menu_icon="cast", default_index=0)
+
     if menu_action == menu_options[0]:
         first_names.show_menu()
     elif menu_action == menu_options[1]:
@@ -53,7 +59,7 @@ def main():
     elif menu_action == menu_options[2]:
         newborns.show_menu()
     
-    st.sidebar.markdown(APP_INFO,unsafe_allow_html=True)
+    st.sidebar.markdown(APP_INFO, unsafe_allow_html=True)
 
 if __name__ == '__main__':
     main()

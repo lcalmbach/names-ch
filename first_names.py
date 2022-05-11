@@ -11,6 +11,7 @@ NAME_FILE = './data/100129.csv'
 WIKI_URL_BASE = 'https://de.wikipedia.org/wiki/'
 min_year = 0
 max_year = 0
+gender_dic={'Frauen': 'W', 'Männer':'M'}
 
 @st.experimental_memo()
 def read_data():
@@ -107,29 +108,38 @@ def get_timeseries(df, settings):
 def show_timeseries(df):    
     with st.expander('Anleitung'):
         st.markdown('Wähle das Geschlecht sowie die Vornamen, deren Häufigkeit und Rang als Zeitreihe dargestellt werden sollen' )
-    gender = st.sidebar.selectbox('Geschlecht', options = ['Weiblich', 'Männlich'])
-    filter_exp = f"gender == '{gender[0]}' & text != 'Übrige'"
+    gender = st.sidebar.selectbox('Geschlecht', options = list(gender_dic.keys()))
+    filter_exp = f"gender == '{gender_dic[gender]}' & text != 'Übrige'"
+    df = filter_data(df, filter_exp).sort_values(by='text')
+    sort_by_options= ['nach Rang', 'Alphabetisch']
+    sort_by = st.sidebar.radio('Sortiere Vornamen', sort_by_options)
+    filter_exp = f"gender == '{gender_dic[gender]}' & text != 'Übrige'"
     df = filter_data(df,filter_exp).sort_values(by='text')
+    df = rank_data(df)
+    if sort_by == sort_by_options[0]:
+        df = df.sort_values(by='rank')
+    else:    
+        df = df.sort_values(by='text')
     lst_names = df['text'].unique()
-    names = st.sidebar.multiselect('Vornamen',lst_names,[lst_names[0],lst_names[1],lst_names[2]])
+    names = st.sidebar.multiselect('Vornamen', lst_names, lst_names[:3])
     filter_exp = f"text.isin({names})"
     df = rank_data(df)
     df = filter_data(df,filter_exp).sort_values(by='text')
     
     settings = {'width':500, 'height':300}
     settings['y'] = alt.Y('value:Q', axis=alt.Axis(title='Anzahl'))
-    settings['title'] =  f'Anzahl des Vornamens {gender}'
+    plural= 'n' if gender_dic[gender] == 'M' else ''
+    settings['title'] =  f'Anzahl des Vornamens von {gender}' + plural
     settings['color'] = 'text'
     chart = get_timeseries(df, settings)
     st.altair_chart(chart)
 
     settings['y'] = alt.Y('rank:Q', axis=alt.Axis(title='Rang'))
-    settings['title'] =  f'Rang des Vornamens {gender}'
+    settings['title'] =  f'Rang des Vornamens von {gender}' + plural
     chart = get_timeseries(df, settings)
     st.altair_chart(chart)
     
     
-
 def show_table(df):
     def aggregate_df(df):
         df_agg = df.groupby(df['text']).value.agg(['min','max','mean']).reset_index()      
@@ -246,19 +256,63 @@ def show_analysis(df):
     
     st.markdown(get_description(df_ranked,name))
 
+def show_ranking(df):
+    years_options = list(df['year'].unique())
+    years_options = [int(x) for x in years_options]
+    years_options.sort(reverse=True)
+    sel_year = st.sidebar.selectbox('Jahr', options=years_options)
+    cutoff= st.sidebar.slider('Show Top',min_value=10, max_value=100)
+    df['year'] = df['year'].astype("int")
+    df = df[df['year'] == sel_year]
+    boys = df[df['gender'] == 'M']
+    boys = rank_data(boys).sort_values('rank')
+    boys = boys[:cutoff]
+    girls= df[df['gender'] == 'W']
+    girls = rank_data(girls).sort_values('rank')
+    girls = girls[:cutoff]
+
+    st.markdown(f"### {sel_year}")
+    cols = st.columns(2)
+    chart_boys = plot_rank(boys)
+    chart_girls = plot_rank(girls)
+    with cols[0]:
+        st.markdown('#### Männer')
+        st.altair_chart(chart_boys)
+    with cols[1]:
+        st.markdown('#### Frauen')
+        st.altair_chart(chart_girls)
+
+
+def plot_rank(df):
+    df.columns=['Jahr','Name','Geschlecht','Anzahl','Rang']
+    
+    h=0 if len(df)<16 else (len(df)-15)*6
+    chart = alt.Chart(df).mark_bar().encode(
+        x="Anzahl:Q",
+        y=alt.Y('Name:N', sort='-x'),
+        tooltip=['Name', 'Rang']
+    ).properties(width=400, height=500 + h)
+    return chart
+
+    
 def show_menu():
     global min_year
     global max_year
 
     df = read_data()#.copy()
     min_year, max_year = get_genderin_genderax_years(df)
-    menu_action = st.sidebar.selectbox("Darstellung",['Wort-Wolke','Zeitreihe', 'Analyse','Tabelle'])
-    if menu_action == 'Wort-Wolke':
+    menu_options= ['Wort-Wolke','Zeitreihe', 'Rang-Reihenfolge', 'Analyse','Tabelle']
+    menu_action = st.sidebar.selectbox("Darstellung", options=menu_options)
+    
+    if menu_action == menu_options[0]:
         show_wordcloud(df)
-    elif menu_action == 'Zeitreihe':
+    elif menu_action == menu_options[1]:
         show_timeseries(df)
-    elif menu_action == 'Analyse':
+    elif menu_action == menu_options[2]:
+        show_ranking(df)
+    elif menu_action == menu_options[3]:
         show_analysis(df)
-    elif menu_action == 'Tabelle':
+    elif menu_action == menu_options[4]:
         show_table(df)
+    
 
